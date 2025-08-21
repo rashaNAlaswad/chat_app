@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 
+import 'core/providers/auth_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/router/routes.dart';
 import 'firebase_options.dart';
@@ -25,12 +27,15 @@ class MainApp extends StatelessWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'Chat App',
-          initialRoute: Routes.login,
-          onGenerateRoute: appRouter.onGenerateRoute,
-          theme: ThemeData(primarySwatch: Colors.green),
+        return ChangeNotifierProvider(
+          create: (context) => AuthProvider(),
+          child: MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'Chat App',
+            initialRoute: Routes.login,
+            onGenerateRoute: appRouter.onGenerateRoute,
+            theme: ThemeData(primarySwatch: Colors.green),
+          ),
         );
       },
     );
