@@ -42,4 +42,10 @@ class AppTextStyles {
     fontWeight: AppFontWeight.semiBold,
     color: AppColors.greenPrimary,
   );
+
+  static TextStyle font14GreenPrimarySemiBold = TextStyle(
+    fontSize: 14.sp,
+    fontWeight: AppFontWeight.semiBold,
+    color: AppColors.greenPrimary,
+  );
 }

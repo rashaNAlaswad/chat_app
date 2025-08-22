@@ -3,8 +3,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart' show Provider;
 
 import '../../../core/common/app_text_form_field.dart';
-import '../../../core/helper/app_regex.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/utils/validation_utils.dart';
+import '../../../core/common/password_visibility_toggle.dart';
 
 class EmailAndPassword extends StatefulWidget {
   final Function(GlobalKey<FormState>) onFormKeyCreated;
@@ -48,7 +49,7 @@ class _EmailAndPasswordState extends State<EmailAndPassword> {
       controller: authProvider.emailController,
       hintText: 'Email Address',
       keyboardType: TextInputType.emailAddress,
-      validator: _validateEmail,
+      validator: (value) => ValidationUtils.getEmailValidationError(value),
     );
   }
 
@@ -58,44 +59,18 @@ class _EmailAndPasswordState extends State<EmailAndPassword> {
       hintText: 'Password',
       isObscureText: _obscurePassword,
       suffixIcon: _buildPasswordVisibilityToggle(),
-      validator: _validatePassword,
+      validator: (value) => ValidationUtils.getPasswordValidationError(value),
     );
   }
 
   Widget _buildPasswordVisibilityToggle() {
-    return IconButton(
-      icon: Icon(
-        _obscurePassword ? Icons.visibility : Icons.visibility_off,
-        color: Colors.grey[600],
-      ),
-      onPressed: () {
-        _obscurePassword = !_obscurePassword;
-        setState(() {});
+    return PasswordVisibilityToggle(
+      isObscured: _obscurePassword,
+      onToggle: () {
+        setState(() {
+          _obscurePassword = !_obscurePassword;
+        });
       },
     );
-  }
-
-  String? _validateEmail(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Please enter your email';
-    }
-
-    if (!AppRegex.isEmailValid(value.trim())) {
-      return 'Please enter a valid email address';
-    }
-
-    return null;
-  }
-
-  String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please enter your password';
-    }
-
-    if (value.length < 6) {
-      return 'Password must be at least 6 characters';
-    }
-
-    return null;
   }
 }

@@ -1,3 +1,4 @@
+import 'package:chat_app/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class PasswordVisibilityToggle extends StatelessWidget {
@@ -15,7 +16,7 @@ class PasswordVisibilityToggle extends StatelessWidget {
     return IconButton(
       icon: Icon(
         isObscured ? Icons.visibility : Icons.visibility_off,
-        color: Colors.grey[600],
+        color: AppColors.gray60,
       ),
       onPressed: onToggle,
     );
