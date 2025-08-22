@@ -48,6 +48,33 @@ class AuthProvider extends ChangeNotifier {
       _setLoading(false);
     }
   }
+
+  Future<bool> createUserWithEmailAndPassword({
+    required String email,
+    required String password,
+  }) async {
+    _setLoading(true);
+    _clearError();
+    
+    try {
+      final user = await _authService.createUserWithEmailAndPassword(
+        email.trim(),
+        password,
+      );
+      
+      _currentUser = user;
+      _setLoading(false);
+      return true;
+    } on FirebaseAuthException catch (e) {
+      _handleFirebaseAuthException(e);
+      return false;
+    } catch (e) {
+      _handleGenericError(e);
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
   
   Future<void> signOut() async {
     _setLoading(true);
@@ -110,6 +137,15 @@ class AuthProvider extends ChangeNotifier {
         break;
       case 'network-request-failed':
         message = 'Network error. Please check your connection.';
+        break;
+      case 'email-already-in-use':
+        message = 'An account with this email already exists.';
+        break;
+      case 'weak-password':
+        message = 'Password is too weak. Please choose a stronger password.';
+        break;
+      case 'operation-not-allowed':
+        message = 'Email/password accounts are not enabled.';
         break;
       default:
         message = 'Authentication failed. Please try again.';
