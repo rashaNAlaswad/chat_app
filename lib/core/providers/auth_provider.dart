@@ -6,9 +6,6 @@ import '../services/auth_service.dart';
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
   
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  
   bool _isLoading = false;
   String? _errorMessage;
   User? _currentUser;
@@ -18,21 +15,17 @@ class AuthProvider extends ChangeNotifier {
   User? get currentUser => _currentUser;
   bool get isAuthenticated => _currentUser != null;
   
-  @override
-  void dispose() {
-    emailController.dispose();
-    passwordController.dispose();
-    super.dispose();
-  }
-  
-  Future<bool> signInWithEmailAndPassword() async {
+  Future<bool> signInWithEmailAndPassword({
+    required String email,
+    required String password,
+  }) async {
     _setLoading(true);
     _clearError();
     
     try {
       final user = await _authService.signInWithEmailAndPassword(
-        emailController.text.trim(),
-        passwordController.text,
+        email.trim(),
+        password,
       );
       
       _currentUser = user;
@@ -82,7 +75,6 @@ class AuthProvider extends ChangeNotifier {
     try {
       await _authService.signOut();
       _currentUser = null;
-      _clearControllers();
     } catch (e) {
       _handleGenericError(e);
     } finally {
@@ -91,7 +83,6 @@ class AuthProvider extends ChangeNotifier {
   }
   
   void clearForm() {
-    _clearControllers();
     _clearError();
   }
   
@@ -109,11 +100,6 @@ class AuthProvider extends ChangeNotifier {
   void _setError(String message) {
     _errorMessage = message;
     notifyListeners();
-  }
-  
-  void _clearControllers() {
-    emailController.clear();
-    passwordController.clear();
   }
   
   void _handleFirebaseAuthException(FirebaseAuthException e) {

@@ -7,10 +7,11 @@ import '../../core/providers/auth_provider.dart';
 import '../../core/router/routes.dart';
 import 'widgets/divider_section.dart';
 import 'widgets/dont_have_account_text.dart';
-import 'widgets/email_and_password.dart';
 import 'widgets/forget_password.dart';
 import 'widgets/header_intro.dart';
 import 'widgets/login_button.dart';
+import 'widgets/login_email_field.dart';
+import 'widgets/login_password_field.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,7 +21,25 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  GlobalKey<FormState>? _formKey;
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _formKey.currentState?.reset();
+    });
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _formKey.currentState?.reset();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,10 +53,16 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(height: 60.h),
               HeaderIntro(),
               SizedBox(height: 40.h),
-              EmailAndPassword(
-                onFormKeyCreated: (formKey) {
-                  _formKey = formKey;
-                },
+              Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    LoginEmailField(controller: _emailController),
+                    SizedBox(height: 16.h),
+                    LoginPasswordField(controller: _passwordController),
+                    SizedBox(height: 8.h),
+                  ],
+                ),    
               ),
               Align(alignment: Alignment.centerRight, child: ForgetPassword()),
               SizedBox(height: 24.h),
@@ -60,7 +85,10 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_validateForm()) return;
 
     try {
-      final success = await Provider.of<AuthProvider>(context, listen: false).signInWithEmailAndPassword();
+      final success = await Provider.of<AuthProvider>(context, listen: false).signInWithEmailAndPassword(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
       _handleAuthenticationResult(success);
     } catch (e) {
       _handleAuthenticationError(e);
@@ -68,7 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   bool _validateForm() {
-    final isValid = _formKey?.currentState?.validate() ?? false;
+    final isValid = _formKey.currentState?.validate() ?? false;
     return isValid;
   }
 
@@ -77,9 +105,15 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (success) {
-    context.pushReplacementNamed(Routes.home);
+      context.pushReplacementNamed(Routes.home);
     } else {
-      _showAuthenticationError();
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final errorMessage = authProvider.errorMessage ?? 'Invalid email or password. Please try again.';
+      
+      _showErrorSnackBar(
+        message: errorMessage,
+        backgroundColor: Colors.red,
+      );
     }
   }
 
@@ -88,14 +122,6 @@ class _LoginScreenState extends State<LoginScreen> {
     
     _showErrorSnackBar(
       message: 'Authentication failed: ${error.toString()}',
-      backgroundColor: Colors.red,
-    );
-  }
-
-
-  void _showAuthenticationError() {
-    _showErrorSnackBar(
-      message: 'Invalid email or password. Please try again.',
       backgroundColor: Colors.red,
     );
   }
