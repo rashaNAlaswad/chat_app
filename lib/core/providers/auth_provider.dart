@@ -45,6 +45,7 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> createUserWithEmailAndPassword({
     required String email,
     required String password,
+    required String displayName,
   }) async {
     _setLoading(true);
     _clearError();
@@ -53,6 +54,7 @@ class AuthProvider extends ChangeNotifier {
       final user = await _authService.createUserWithEmailAndPassword(
         email.trim(),
         password,
+        displayName.trim(),
       );
       
       _currentUser = user;
@@ -82,8 +84,22 @@ class AuthProvider extends ChangeNotifier {
     }
   }
   
-  void clearForm() {
+  Future<bool> updateDisplayName(String displayName) async {
+    _setLoading(true);
     _clearError();
+    
+    try {
+      await _authService.updateUserDisplayName(displayName);
+      _currentUser = _authService.currentUser;
+      notifyListeners();
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _handleGenericError(e);
+      return false;
+    } finally {
+      _setLoading(false);
+    }
   }
   
   

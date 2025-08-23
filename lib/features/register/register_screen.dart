@@ -98,6 +98,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ).createUserWithEmailAndPassword(
             email: _emailController.text,
             password: _passwordController.text,
+            displayName: _nameController.text,
           );
       _handleRegistrationResult(success);
     } catch (e) {
