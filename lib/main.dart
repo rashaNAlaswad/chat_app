@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
 import 'core/providers/auth_provider.dart';
+import 'core/providers/user_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/router/routes.dart';
 import 'firebase_options.dart';
@@ -27,8 +28,11 @@ class MainApp extends StatelessWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-        return ChangeNotifierProvider(
-          create: (context) => AuthProvider(),
+        return MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (context) => AuthProvider()),
+            ChangeNotifierProvider(create: (context) => UserProvider()),
+          ],
           child: MaterialApp(
             debugShowCheckedModeBanner: false,
             title: 'Chat App',

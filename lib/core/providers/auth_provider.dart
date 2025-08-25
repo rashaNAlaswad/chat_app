@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../services/auth_service.dart';
+import '../services/user_profile_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
+  final UserProfileService _userProfileService = UserProfileService();
   
   bool _isLoading = false;
   String? _errorMessage;
@@ -14,7 +16,7 @@ class AuthProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   User? get currentUser => _currentUser;
   bool get isAuthenticated => _currentUser != null;
-  
+
   Future<bool> signInWithEmailAndPassword({
     required String email,
     required String password,
@@ -27,6 +29,9 @@ class AuthProvider extends ChangeNotifier {
         email.trim(),
         password,
       );
+      
+      await _userProfileService.ensureUserProfileExists(user);
+      await _userProfileService.setUserOnline();
       
       _currentUser = user;
       _setLoading(false);
@@ -57,6 +62,8 @@ class AuthProvider extends ChangeNotifier {
         displayName.trim(),
       );
       
+      await _userProfileService.createUserProfile(user, displayName);
+      
       _currentUser = user;
       _setLoading(false);
       return true;
@@ -75,6 +82,7 @@ class AuthProvider extends ChangeNotifier {
     _setLoading(true);
     
     try {
+      await _userProfileService.setUserOffline();
       await _authService.signOut();
       _currentUser = null;
     } catch (e) {
@@ -90,6 +98,7 @@ class AuthProvider extends ChangeNotifier {
     
     try {
       await _authService.updateUserDisplayName(displayName);
+      await _userProfileService.updateUserDisplayName(displayName);
       _currentUser = _authService.currentUser;
       notifyListeners();
       _setLoading(false);
@@ -148,6 +157,9 @@ class AuthProvider extends ChangeNotifier {
         break;
       case 'operation-not-allowed':
         message = 'Email/password accounts are not enabled.';
+        break;
+      case 'invalid-credential':
+        message = 'Invalid credentials. Please check your email and password, or try registering first.';
         break;
       default:
         message = 'Authentication failed. Please try again.';
