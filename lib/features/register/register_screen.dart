@@ -116,7 +116,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!mounted) return;
 
     if (success) {
-      context.pushReplacementNamed(Routes.home);
+      context.pushReplacementNamed(Routes.chatList);
     } else {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final errorMessage = authProvider.errorMessage ?? 'Registration failed. Please try again.';

@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
 import 'core/providers/auth_provider.dart';
+import 'core/providers/chat_provider.dart';
 import 'core/providers/user_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/router/routes.dart';
@@ -32,6 +33,7 @@ class MainApp extends StatelessWidget {
           providers: [
             ChangeNotifierProvider(create: (context) => AuthProvider()),
             ChangeNotifierProvider(create: (context) => UserProvider()),
+            ChangeNotifierProvider(create: (context) => ChatProvider()),
           ],
           child: MaterialApp(
             debugShowCheckedModeBanner: false,

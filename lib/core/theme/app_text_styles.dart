@@ -48,4 +48,22 @@ class AppTextStyles {
     fontWeight: AppFontWeight.semiBold,
     color: AppColors.greenPrimary,
   );
+
+  static TextStyle font14Gray60Regular = TextStyle(
+    fontSize: 14.sp,
+    fontWeight: AppFontWeight.regular,
+    color: AppColors.gray60,
+  );
+
+  static TextStyle font12WhiteSemiBold = TextStyle(
+    fontSize: 12.sp,
+    fontWeight: AppFontWeight.semiBold,
+    color: AppColors.white,
+  );
+
+  static TextStyle font12Gray60Regular = TextStyle(
+    fontSize: 12.sp,
+    fontWeight: AppFontWeight.regular,
+    color: AppColors.gray60,
+  );
 }
