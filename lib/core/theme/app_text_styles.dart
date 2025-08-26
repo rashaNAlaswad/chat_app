@@ -72,4 +72,10 @@ class AppTextStyles {
     fontWeight: AppFontWeight.semiBold,
     color: AppColors.gray60,
   );
+
+  static TextStyle font18WhiteSemiBold = TextStyle(
+    fontSize: 18.sp,
+    fontWeight: AppFontWeight.semiBold,
+    color: AppColors.white,
+  );
 }
