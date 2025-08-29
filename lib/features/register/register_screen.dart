@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/providers/auth_provider.dart';
 import '../../core/router/routes.dart';
+import '../../core/utils/utils.dart';
 import 'widgets/confirm_password_field.dart';
 import 'widgets/email_field.dart';
 import 'widgets/header_intro.dart';
@@ -91,15 +92,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!_validateForm()) return;
 
     try {
-      final success =
-          await Provider.of<AuthProvider>(
-            context,
-            listen: false,
-          ).createUserWithEmailAndPassword(
-            email: _emailController.text,
-            password: _passwordController.text,
-            displayName: _nameController.text,
-          );
+      final success = await Provider.of<AuthProvider>(
+        context,
+        listen: false,
+      ).createUserWithEmailAndPassword(
+        email: _emailController.text,
+        password: _passwordController.text,
+        displayName: _nameController.text,
+      );
       _handleRegistrationResult(success);
     } catch (e) {
       _handleRegistrationError(e);
@@ -119,11 +119,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
       context.pushReplacementNamed(Routes.chatList);
     } else {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final errorMessage = authProvider.errorMessage ?? 'Registration failed. Please try again.';
-      
-      _showErrorSnackBar(
+      final errorMessage =
+          authProvider.errorMessage ?? 'Registration failed. Please try again.';
+
+      Utils.showErrorSnackBar(
         message: errorMessage,
         backgroundColor: Colors.red,
+        context: context,
       );
     }
   }
@@ -131,24 +133,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void _handleRegistrationError(dynamic error) {
     if (!mounted) return;
 
-    _showErrorSnackBar(
+    Utils.showErrorSnackBar(
       message: 'Registration failed: ${error.toString()}',
       backgroundColor: Colors.red,
-    );
-  }
-
-  void _showErrorSnackBar({
-    required String message,
-    required Color backgroundColor,
-  }) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: backgroundColor,
-        behavior: SnackBarBehavior.floating,
-        margin: EdgeInsets.all(16.w),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-      ),
+      context: context,
     );
   }
 }

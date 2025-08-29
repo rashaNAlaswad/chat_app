@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/providers/auth_provider.dart';
 import '../../core/router/routes.dart';
+import '../../core/utils/utils.dart';
 import 'widgets/divider_section.dart';
 import 'widgets/dont_have_account_text.dart';
 import 'widgets/forget_password.dart';
@@ -62,13 +63,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     LoginPasswordField(controller: _passwordController),
                     SizedBox(height: 8.h),
                   ],
-                ),    
+                ),
               ),
               Align(alignment: Alignment.centerRight, child: ForgetPassword()),
               SizedBox(height: 24.h),
-              LoginButton(
-                onPressed: _handleLogin,
-              ),
+              LoginButton(onPressed: _handleLogin),
               SizedBox(height: 24.h),
               DividerSection(),
               SizedBox(height: 24.h),
@@ -80,12 +79,14 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-
   Future<void> _handleLogin() async {
     if (!_validateForm()) return;
 
     try {
-      final success = await Provider.of<AuthProvider>(context, listen: false).signInWithEmailAndPassword(
+      final success = await Provider.of<AuthProvider>(
+        context,
+        listen: false,
+      ).signInWithEmailAndPassword(
         email: _emailController.text,
         password: _passwordController.text,
       );
@@ -100,7 +101,6 @@ class _LoginScreenState extends State<LoginScreen> {
     return isValid;
   }
 
-
   void _handleAuthenticationResult(bool success) {
     if (!mounted) return;
 
@@ -108,38 +108,25 @@ class _LoginScreenState extends State<LoginScreen> {
       context.pushReplacementNamed(Routes.chatList);
     } else {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final errorMessage = authProvider.errorMessage ?? 'Invalid email or password. Please try again.';
-      
-      _showErrorSnackBar(
+      final errorMessage =
+          authProvider.errorMessage ??
+          'Invalid email or password. Please try again.';
+
+      Utils.showErrorSnackBar(
         message: errorMessage,
         backgroundColor: Colors.red,
+        context: context,
       );
     }
   }
 
   void _handleAuthenticationError(dynamic error) {
     if (!mounted) return;
-    
-    _showErrorSnackBar(
+
+    Utils.showErrorSnackBar(
       message: 'Authentication failed: ${error.toString()}',
       backgroundColor: Colors.red,
-    );
-  }
-
-  void _showErrorSnackBar({
-    required String message,
-    required Color backgroundColor,
-  }) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: backgroundColor,
-        behavior: SnackBarBehavior.floating,
-        margin: EdgeInsets.all(16.w),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8.r),
-        ),
-      ),
+      context: context,
     );
   }
 }
