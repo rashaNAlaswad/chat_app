@@ -1,8 +1,10 @@
+import 'package:chat_app/core/helper/navigation_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/providers/user_provider.dart';
+import '../../../core/router/routes.dart';
 import '../../../core/theme/app_text_styles.dart';
 import 'user_tile.dart';
 
@@ -22,11 +24,7 @@ class UserListContent extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.people_outline,
-                  size: 64.w,
-                  color: Colors.grey[400],
-                ),
+                Icon(Icons.people_outline, size: 64.w, color: Colors.grey[400]),
                 SizedBox(height: 16.h),
                 Text(
                   userProvider.searchQuery.isNotEmpty
@@ -55,6 +53,6 @@ class UserListContent extends StatelessWidget {
   }
 
   void _handleUserTap(BuildContext context, user) {
-
+    context.pushNamed(Routes.chatDetail, arguments: user.id);
   }
 }

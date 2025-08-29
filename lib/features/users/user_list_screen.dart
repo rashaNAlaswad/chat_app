@@ -44,12 +44,9 @@ class _UserListScreenState extends State<UserListScreen> {
         children: [
           SearchBarWidget(searchController: _searchController),
           SearchResultsHeader(onClearSearch: _clearSearch),
-          const Expanded(
-            child: UserListContent(),
-          ),
+          const Expanded(child: UserListContent()),
         ],
       ),
     );
   }
 }
-
