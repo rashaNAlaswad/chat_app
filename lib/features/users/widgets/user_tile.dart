@@ -9,11 +9,7 @@ class UserTile extends StatelessWidget {
   final UserModel user;
   final VoidCallback onTap;
 
-  const UserTile({
-    super.key,
-    required this.user,
-    required this.onTap,
-  });
+  const UserTile({super.key, required this.user, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -25,10 +21,7 @@ class UserTile extends StatelessWidget {
         leading: _UserAvatar(user: user),
         title: _UserInfoSection(user: user),
         trailing: _ChatActionButton(onTap: onTap),
-        contentPadding: EdgeInsets.symmetric(
-          horizontal: 16.w,
-          vertical: 8.h,
-        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       ),
     );
   }
@@ -37,9 +30,7 @@ class UserTile extends StatelessWidget {
 class _UserAvatar extends StatelessWidget {
   final UserModel user;
 
-  const _UserAvatar({
-    required this.user,
-  });
+  const _UserAvatar({required this.user});
 
   @override
   Widget build(BuildContext context) {
@@ -49,23 +40,13 @@ class _UserAvatar extends StatelessWidget {
           backgroundColor: AppColors.greenPrimary,
           radius: 25.r,
           child: Text(
-            _getInitials(),
+            user.displayName[0].toUpperCase(),
             style: AppTextStyles.font18WhiteSemiBold,
           ),
         ),
         if (user.isOnline) _buildOnlineIndicator(),
       ],
     );
-  }
-
-  String _getInitials() {
-    if (user.displayName.isEmpty) return '?';
-    
-    final nameParts = user.displayName.trim().split(' ');
-    if (nameParts.length >= 2) {
-      return '${nameParts[0][0]}${nameParts[1][0]}'.toUpperCase();
-    }
-    return user.displayName[0].toUpperCase();
   }
 
   Widget _buildOnlineIndicator() {
@@ -78,10 +59,7 @@ class _UserAvatar extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.green,
           shape: BoxShape.circle,
-          border: Border.all(
-            color: Colors.white,
-            width: 2.w,
-          ),
+          border: Border.all(color: Colors.white, width: 2.w),
         ),
       ),
     );
@@ -105,28 +83,24 @@ class _UserInfoSection extends StatelessWidget {
           ),
         ),
         SizedBox(height: 4.h),
-        Text(
-          user.email,
-          style: AppTextStyles.font14Gray60Regular,
-        ),
+        Text(user.email, style: AppTextStyles.font14Gray60Regular),
         SizedBox(height: 4.h),
-        
+
         _buildStatusText(),
       ],
     );
   }
 
   Widget _buildStatusText() {
-    final statusText = user.isOnline 
-        ? 'Online' 
-        : 'Last seen ${_formatLastSeen(user.lastSeen)}';
+    final statusText =
+        user.isOnline
+            ? 'Online'
+            : 'Last seen ${_formatLastSeen(user.lastSeen)}';
     final statusColor = user.isOnline ? Colors.green : Colors.grey[500];
-    
+
     return Text(
       statusText,
-      style: AppTextStyles.font12Gray60Regular.copyWith(
-        color: statusColor,
-      ),
+      style: AppTextStyles.font12Gray60Regular.copyWith(color: statusColor),
     );
   }
 
