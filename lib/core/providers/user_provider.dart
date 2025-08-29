@@ -6,8 +6,10 @@ import '../models/user_model.dart';
 import '../constants/app_constants.dart';
 
 class UserProvider extends ChangeNotifier {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth;
+  final FirebaseFirestore _firestore;
+
+  UserProvider(this._auth, this._firestore);
 
   List<UserModel> _users = [];
   String _searchQuery = '';
@@ -20,15 +22,20 @@ class UserProvider extends ChangeNotifier {
   List<UserModel> get filteredUsers {
     final currentUserId = _auth.currentUser?.uid;
     var filtered = _users.where((user) => user.id != currentUserId).toList();
-    
+
     if (_searchQuery.isNotEmpty) {
-      filtered = filtered.where((user) {
-        final nameMatch = user.displayName.toLowerCase().contains(_searchQuery.toLowerCase());
-        final emailMatch = user.email.toLowerCase().contains(_searchQuery.toLowerCase());
-        return nameMatch || emailMatch;
-      }).toList();
+      filtered =
+          filtered.where((user) {
+            final nameMatch = user.displayName.toLowerCase().contains(
+              _searchQuery.toLowerCase(),
+            );
+            final emailMatch = user.email.toLowerCase().contains(
+              _searchQuery.toLowerCase(),
+            );
+            return nameMatch || emailMatch;
+          }).toList();
     }
-    
+
     return filtered;
   }
 
@@ -38,25 +45,22 @@ class UserProvider extends ChangeNotifier {
 
     try {
       await _ensureCurrentUserProfile();
-      
-      final querySnapshot = await _firestore
-          .collection(AppConstants.usersCollection)
-          .orderBy(AppConstants.userDisplayNameField)
-          .get();
 
-      _users = querySnapshot.docs
-          .map((doc) {
+      final querySnapshot =
+          await _firestore
+              .collection(AppConstants.usersCollection)
+              .orderBy(AppConstants.userDisplayNameField)
+              .get();
+
+      _users =
+          querySnapshot.docs.map((doc) {
             final data = {...doc.data(), AppConstants.userIdField: doc.id};
-            
-            if (!data.containsKey(AppConstants.userDisplayNameField)) {
-            }
-            if (!data.containsKey(AppConstants.userEmailField)) {
-            }
-            
+
+            if (!data.containsKey(AppConstants.userDisplayNameField)) {}
+            if (!data.containsKey(AppConstants.userEmailField)) {}
+
             return UserModel.fromMap(data);
-          })
-          .toList();      
-      
+          }).toList();
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -69,18 +73,25 @@ class UserProvider extends ChangeNotifier {
       return;
     }
 
-    final userDoc = await _firestore.collection(AppConstants.usersCollection).doc(currentUser.uid).get();
-    
+    final userDoc =
+        await _firestore
+            .collection(AppConstants.usersCollection)
+            .doc(currentUser.uid)
+            .get();
+
     if (!userDoc.exists) {
-      await _firestore.collection(AppConstants.usersCollection).doc(currentUser.uid).set({
-        AppConstants.userIdField: currentUser.uid,
-        AppConstants.userEmailField: currentUser.email ?? "",
-        AppConstants.userDisplayNameField: currentUser.displayName ?? "",
-        AppConstants.userPhotoUrlField: currentUser.photoURL,
-        AppConstants.userCreatedAtField: FieldValue.serverTimestamp(),
-        AppConstants.userLastSeenField: FieldValue.serverTimestamp(),
-        AppConstants.userIsOnlineField: true,
-      });
+      await _firestore
+          .collection(AppConstants.usersCollection)
+          .doc(currentUser.uid)
+          .set({
+            AppConstants.userIdField: currentUser.uid,
+            AppConstants.userEmailField: currentUser.email ?? "",
+            AppConstants.userDisplayNameField: currentUser.displayName ?? "",
+            AppConstants.userPhotoUrlField: currentUser.photoURL,
+            AppConstants.userCreatedAtField: FieldValue.serverTimestamp(),
+            AppConstants.userLastSeenField: FieldValue.serverTimestamp(),
+            AppConstants.userIsOnlineField: true,
+          });
     }
   }
 
@@ -108,8 +119,8 @@ class UserProvider extends ChangeNotifier {
         .collection(AppConstants.usersCollection)
         .doc(currentUser.uid)
         .update({
-      AppConstants.userIsOnlineField: isOnline,
-      AppConstants.userLastSeenField: FieldValue.serverTimestamp(),
-    });
+          AppConstants.userIsOnlineField: isOnline,
+          AppConstants.userLastSeenField: FieldValue.serverTimestamp(),
+        });
   }
 }

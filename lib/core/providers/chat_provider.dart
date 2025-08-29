@@ -6,11 +6,13 @@ import '../models/chat_message.dart';
 import '../models/chat_room.dart';
 
 class ChatProvider with ChangeNotifier {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  
+  final FirebaseFirestore _firestore;
+  final FirebaseAuth _auth;
+
+  ChatProvider(this._auth, this._firestore);
+
   List<ChatRoom> _chatRooms = [];
-  List<ChatMessage> _messages = [];
+  final List<ChatMessage> _messages = [];
   bool _isLoading = false;
   String? _currentChatRoomId;
 
@@ -27,15 +29,17 @@ class ChatProvider with ChangeNotifier {
       final currentUserId = _auth.currentUser?.uid;
       if (currentUserId == null) return;
 
-      final querySnapshot = await _firestore
-          .collection('chatRooms')
-          .where('currentUserId', isEqualTo: currentUserId)
-          .orderBy('lastMessageTime', descending: true)
-          .get();
+      final querySnapshot =
+          await _firestore
+              .collection('chatRooms')
+              .where('currentUserId', isEqualTo: currentUserId)
+              .orderBy('lastMessageTime', descending: true)
+              .get();
 
-      _chatRooms = querySnapshot.docs
-          .map((doc) => ChatRoom.fromMap({...doc.data(), 'id': doc.id}))
-          .toList();
+      _chatRooms =
+          querySnapshot.docs
+              .map((doc) => ChatRoom.fromMap({...doc.data(), 'id': doc.id}))
+              .toList();
     } catch (e) {
       print('Error loading chat rooms: $e');
     } finally {
