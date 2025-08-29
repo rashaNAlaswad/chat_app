@@ -21,38 +21,47 @@ class ProfileScreen extends StatelessWidget {
       backgroundColor: AppColors.white,
       appBar: AppBar(
         backgroundColor: AppColors.white,
-        title: Text('Profile', style: AppTextStyles.font32Black100Bold.copyWith(fontSize: 20.sp)),
+        title: Text(
+          'Profile',
+          style: AppTextStyles.font32Black100Bold.copyWith(fontSize: 20.sp),
+        ),
         centerTitle: true,
         automaticallyImplyLeading: false,
       ),
       body: Consumer<AuthProvider>(
-          builder: (context, authProvider, child) {
-            final user = authProvider.currentUser;
-            
-            if (user == null) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            }
+        builder: (context, authProvider, child) {
+          final user = authProvider.currentUser;
 
-            return SingleChildScrollView(
-              padding: EdgeInsets.all(24.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ProfileHeader(user: user),
-                  SizedBox(height: 40.h),
-                  UserInfoSection(user: user),
-                  SizedBox(height: 40.h),
-                  SignOutButton(
-                    authProvider: authProvider,
-                    onPressed: () => _showSignOutDialog(context, authProvider),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
+          if (user == null) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (context.mounted) {
+                context.pushNamedAndRemoveUntil(
+                  Routes.login,
+                  predicate: (route) => false,
+                );
+              }
+            });
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          return SingleChildScrollView(
+            padding: EdgeInsets.all(24.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ProfileHeader(user: user),
+                SizedBox(height: 40.h),
+                UserInfoSection(user: user),
+                SizedBox(height: 40.h),
+                SignOutButton(
+                  authProvider: authProvider,
+                  onPressed: () => _showSignOutDialog(context, authProvider),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -64,21 +73,10 @@ class ProfileScreen extends StatelessWidget {
           onCancel: () => context.pop(),
           onConfirm: () async {
             context.pop();
-            await _signOut(context, authProvider);
+            await authProvider.signOut();
           },
         );
       },
     );
-  }
-
-  Future<void> _signOut(BuildContext context, AuthProvider authProvider) async {
-    await authProvider.signOut();
-    
-    if (context.mounted) {
-      context.pushNamedAndRemoveUntil(
-        Routes.login,
-        predicate: (route) => false,
-      );
-    }
   }
 }

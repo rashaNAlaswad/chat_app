@@ -8,7 +8,12 @@ class AuthProvider extends ChangeNotifier {
   final AuthService _authService;
   final UserProfileService _userProfileService;
 
-  AuthProvider(this._authService, this._userProfileService);
+  AuthProvider(this._authService, this._userProfileService) {
+    _authService.authStateChanges.listen((User? user) {
+      _currentUser = user;
+      notifyListeners();
+    });
+  }
 
   bool _isLoading = false;
   String? _errorMessage;
@@ -86,7 +91,6 @@ class AuthProvider extends ChangeNotifier {
     try {
       await _userProfileService.setUserOffline();
       await _authService.signOut();
-      _currentUser = null;
     } catch (e) {
       _handleGenericError(e);
     } finally {
