@@ -9,13 +9,14 @@ import 'core/providers/chat_provider.dart';
 import 'core/providers/user_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/router/routes.dart';
+import 'core/theme/app_theme.dart';
 import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  
+
   setupGetIt();
 
   runApp(MainApp(appRouter: AppRouter()));
@@ -43,7 +44,7 @@ class MainApp extends StatelessWidget {
             title: 'Chat App',
             initialRoute: Routes.login,
             onGenerateRoute: appRouter.onGenerateRoute,
-            theme: ThemeData(primarySwatch: Colors.green),
+            theme: appTheme(),
           ),
         );
       },
