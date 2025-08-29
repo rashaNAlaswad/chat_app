@@ -44,8 +44,6 @@ class UserProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _ensureCurrentUserProfile();
-
       final querySnapshot =
           await _firestore
               .collection(AppConstants.usersCollection)
@@ -55,10 +53,6 @@ class UserProvider extends ChangeNotifier {
       _users =
           querySnapshot.docs.map((doc) {
             final data = {...doc.data(), AppConstants.userIdField: doc.id};
-
-            if (!data.containsKey(AppConstants.userDisplayNameField)) {}
-            if (!data.containsKey(AppConstants.userEmailField)) {}
-
             return UserModel.fromMap(data);
           }).toList();
     } finally {
@@ -67,44 +61,9 @@ class UserProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> _ensureCurrentUserProfile() async {
-    final currentUser = _auth.currentUser;
-    if (currentUser == null) {
-      return;
-    }
-
-    final userDoc =
-        await _firestore
-            .collection(AppConstants.usersCollection)
-            .doc(currentUser.uid)
-            .get();
-
-    if (!userDoc.exists) {
-      await _firestore
-          .collection(AppConstants.usersCollection)
-          .doc(currentUser.uid)
-          .set({
-            AppConstants.userIdField: currentUser.uid,
-            AppConstants.userEmailField: currentUser.email ?? "",
-            AppConstants.userDisplayNameField: currentUser.displayName ?? "",
-            AppConstants.userPhotoUrlField: currentUser.photoURL,
-            AppConstants.userCreatedAtField: FieldValue.serverTimestamp(),
-            AppConstants.userLastSeenField: FieldValue.serverTimestamp(),
-            AppConstants.userIsOnlineField: true,
-          });
-    }
-  }
-
   void searchUsers(String query) {
     _searchQuery = query;
     notifyListeners();
-  }
-
-  Future<void> createOrUpdateUser(UserModel user) async {
-    await _firestore
-        .collection(AppConstants.usersCollection)
-        .doc(user.id)
-        .set(user.toMap());
   }
 
   UserModel? getUserById(String userId) {
