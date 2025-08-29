@@ -7,10 +7,7 @@ import '../../../core/providers/user_provider.dart';
 class SearchBarWidget extends StatelessWidget {
   final TextEditingController searchController;
 
-  const SearchBarWidget({
-    super.key,
-    required this.searchController,
-  });
+  const SearchBarWidget({super.key, required this.searchController});
 
   @override
   Widget build(BuildContext context) {
@@ -24,18 +21,7 @@ class SearchBarWidget extends StatelessWidget {
         decoration: InputDecoration(
           hintText: 'Search users by name or email...',
           prefixIcon: const Icon(Icons.search),
-          suffixIcon: searchController.text.isNotEmpty
-              ? IconButton(
-                  onPressed: () {
-                    searchController.clear();
-                    context.read<UserProvider>().searchUsers('');
-                  },
-                  icon: const Icon(Icons.clear),
-                )
-              : null,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12.r),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
           filled: true,
           fillColor: Colors.grey[100],
         ),
