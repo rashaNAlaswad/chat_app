@@ -1,97 +1,135 @@
 import 'package:chat_app/core/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../../core/di/dependency_injection.dart';
 import '../../../core/models/chat_room.dart';
+import '../../../core/providers/chat_provider.dart';
 import '../../../core/theme/app_colors.dart';
 
 class ChatRoomTile extends StatelessWidget {
   final ChatRoom chatRoom;
   final VoidCallback onTap;
 
-  const ChatRoomTile({
-    super.key,
-    required this.chatRoom,
-    required this.onTap,
-  });
+  const ChatRoomTile({super.key, required this.chatRoom, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
-    final otherParticipantId = chatRoom.participantIds
-        .firstWhere((id) => id != currentUserId, orElse: () => '');
-    final otherParticipantName = chatRoom.participantNames[otherParticipantId] ?? 'Unknown';
+    final chatProvider = getIt<ChatProvider>();
+    final currentUserId = chatProvider.currentUserId;
+    final otherParticipantName = _getOtherParticipantName();
 
     return Card(
       margin: EdgeInsets.only(bottom: 12.h),
       elevation: 2,
       child: ListTile(
         onTap: onTap,
-        leading: CircleAvatar(
-          backgroundColor: AppColors.greenPrimary,
-          radius: 25.r,
+        leading: _buildAvatar(otherParticipantName),
+        title: _buildTitle(otherParticipantName),
+        subtitle: _buildSubtitle(currentUserId, chatProvider),
+        trailing: _buildTrailingIcon(currentUserId),
+      ),
+    );
+  }
+
+  String _getOtherParticipantName() {
+    return chatRoom.otherUserName.isNotEmpty
+        ? chatRoom.otherUserName
+        : 'Unknown User';
+  }
+
+  Widget _buildAvatar(String participantName) {
+    return CircleAvatar(
+      backgroundColor: AppColors.greenPrimary,
+      radius: 25.r,
+      child: Text(
+        participantName[0].toUpperCase(),
+        style: AppTextStyles.font16WhiteSemiBold,
+      ),
+    );
+  }
+
+  Widget _buildTitle(String participantName) {
+    return Row(
+      children: [
+        Expanded(
           child: Text(
-            otherParticipantName.isNotEmpty ? otherParticipantName[0].toUpperCase() : '?',
-            style: AppTextStyles.font16WhiteSemiBold,
+            participantName,
+            style: AppTextStyles.font16Gray60SemiBold.copyWith(
+              color: AppColors.black100,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
-        title: Row(
+        if (chatRoom.unreadCount > 0) _buildUnreadBadge(),
+      ],
+    );
+  }
+
+  Widget _buildUnreadBadge() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+      decoration: BoxDecoration(
+        color: AppColors.greenPrimary,
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      child: Text(
+        chatRoom.unreadCount.toString(),
+        style: AppTextStyles.font12WhiteSemiBold,
+      ),
+    );
+  }
+
+  Widget _buildSubtitle(String? currentUserId, ChatProvider chatProvider) {
+    final lastMessageText = _getLastMessageText(currentUserId);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(height: 4.h),
+        Row(
           children: [
             Expanded(
               child: Text(
-                otherParticipantName,
-                style: AppTextStyles.font16WhiteSemiBold,
-                maxLines: 1,
+                lastMessageText,
+                style: AppTextStyles.font14Gray60Regular,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            if (chatRoom.unreadCount > 0)
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: AppColors.greenPrimary,
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Text(
-                  chatRoom.unreadCount.toString(),
-                  style: AppTextStyles.font12WhiteSemiBold,
-                ),
-              ),
-          ],
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 4.h),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    chatRoom.lastMessage,
-                    style: AppTextStyles.font14Gray60Regular,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                SizedBox(width: 8.w),
-                Text(
-                  _formatTime(chatRoom.lastMessageTime),
-                  style: AppTextStyles.font12Gray60Regular,
-                ),
-              ],
+            SizedBox(width: 8.w),
+            Text(
+              _formatTime(chatRoom.lastMessageTime),
+              style: AppTextStyles.font12Gray60Regular,
             ),
           ],
         ),
-        trailing: chatRoom.lastMessageSenderId == currentUserId
-            ? Icon(
-                Icons.done_all,
-                size: 16.w,
-                color: chatRoom.unreadCount > 0 ? Colors.grey : AppColors.greenPrimary,
-              )
-            : null,
-      ),
+      ],
     );
+  }
+
+  String _getLastMessageText(String? currentUserId) {
+    final isFromOtherUser = chatRoom.lastMessageSenderId != currentUserId;
+    final hasSenderName = chatRoom.lastMessageSenderName?.isNotEmpty == true;
+
+    if (isFromOtherUser && hasSenderName) {
+      return '${chatRoom.lastMessageSenderName}: ${chatRoom.lastMessage}';
+    }
+
+    return chatRoom.lastMessage;
+  }
+
+  Widget? _buildTrailingIcon(String? currentUserId) {
+    final isFromCurrentUser = chatRoom.lastMessageSenderId == currentUserId;
+
+    if (!isFromCurrentUser) return null;
+
+    final hasUnreadMessages = chatRoom.unreadCount > 0;
+    final icon = hasUnreadMessages ? Icons.done_all : Icons.done;
+    final color = hasUnreadMessages ? AppColors.greenPrimary : Colors.grey;
+
+    return Icon(icon, size: 16.w, color: color);
   }
 
   String _formatTime(DateTime time) {
