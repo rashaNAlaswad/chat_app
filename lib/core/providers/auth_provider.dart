@@ -138,13 +138,6 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  void reset() {
-    _authState = AuthState.initial;
-    _errorMessage = null;
-    _isLoading = false;
-    notifyListeners();
-  }
-
   void _setLoading(bool loading) {
     _isLoading = loading;
     _authState = loading ? AuthState.loading : _authState;

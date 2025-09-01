@@ -6,15 +6,11 @@ class AuthService {
   AuthService(this._auth);
 
   Future<User> signInWithEmailAndPassword(String email, String password) async {
-    try {
-      final userCredential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      return userCredential.user!;
-    } on FirebaseAuthException {
-      rethrow;
-    }
+    final userCredential = await _auth.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    return userCredential.user!;
   }
 
   Future<User> createUserWithEmailAndPassword(
@@ -22,43 +18,30 @@ class AuthService {
     String password,
     String displayName,
   ) async {
-    try {
-      final userCredential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+    final userCredential = await _auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
 
-      await userCredential.user!.updateDisplayName(displayName);
-      await userCredential.user!.reload();
+    await userCredential.user!.updateDisplayName(displayName);
+    await userCredential.user!.reload();
 
-      return userCredential.user!;
-    } on FirebaseAuthException {
-      rethrow;
-    }
+    return userCredential.user!;
   }
 
   Future<void> updateUserDisplayName(String displayName) async {
-    try {
-      final user = _auth.currentUser;
-      if (user != null) {
-        await user.updateDisplayName(displayName);
-      }
-    } on FirebaseAuthException {
-      rethrow;
+    final user = _auth.currentUser;
+    if (user != null) {
+      await user.updateDisplayName(displayName);
+      await user.reload();
     }
   }
 
   Future<void> signOut() async {
-    try {
-      await _auth.signOut();
-    } on FirebaseAuthException {
-      rethrow;
-    }
+    await _auth.signOut();
   }
 
   User? get currentUser => _auth.currentUser;
-
-  bool get isSignedIn => _auth.currentUser != null;
 
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 }

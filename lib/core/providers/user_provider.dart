@@ -67,7 +67,11 @@ class UserProvider extends ChangeNotifier {
   }
 
   UserModel? getUserById(String userId) {
-    return _users.firstWhere((user) => user.id == userId);
+    try {
+      return _users.firstWhere((user) => user.id == userId);
+    } catch (e) {
+      return null;
+    }
   }
 
   Future<void> updateOnlineStatus(bool isOnline) async {

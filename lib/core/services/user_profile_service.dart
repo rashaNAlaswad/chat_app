@@ -50,13 +50,6 @@ class UserProfileService {
     }
   }
 
-  Future<void> updateUserModel(UserModel updatedUser) async {
-    await _firestore
-        .collection(AppConstants.usersCollection)
-        .doc(updatedUser.id)
-        .set(updatedUser.toMapForFirestore());
-  }
-
   Future<void> setUserOnline() async {
     final user = _auth.currentUser;
     if (user != null) {
