@@ -82,18 +82,14 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _handleLogin() async {
     if (!_validateForm()) return;
 
-    try {
-      final success = await Provider.of<AuthProvider>(
-        context,
-        listen: false,
-      ).signInWithEmailAndPassword(
-        email: _emailController.text,
-        password: _passwordController.text,
-      );
-      _handleAuthenticationResult(success);
-    } catch (e) {
-      _handleAuthenticationError(e);
-    }
+    final success = await Provider.of<AuthProvider>(
+      context,
+      listen: false,
+    ).signInWithEmailAndPassword(
+      email: _emailController.text,
+      password: _passwordController.text,
+    );
+    _handleAuthenticationResult(success);
   }
 
   bool _validateForm() {
@@ -118,15 +114,5 @@ class _LoginScreenState extends State<LoginScreen> {
         context: context,
       );
     }
-  }
-
-  void _handleAuthenticationError(dynamic error) {
-    if (!mounted) return;
-
-    Utils.showErrorSnackBar(
-      message: 'Authentication failed: ${error.toString()}',
-      backgroundColor: Colors.red,
-      context: context,
-    );
   }
 }

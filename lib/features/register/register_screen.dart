@@ -91,19 +91,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _handleRegister() async {
     if (!_validateForm()) return;
 
-    try {
-      final success = await Provider.of<AuthProvider>(
-        context,
-        listen: false,
-      ).createUserWithEmailAndPassword(
-        email: _emailController.text,
-        password: _passwordController.text,
-        displayName: _nameController.text,
-      );
-      _handleRegistrationResult(success);
-    } catch (e) {
-      _handleRegistrationError(e);
-    }
+    final success = await Provider.of<AuthProvider>(
+      context,
+      listen: false,
+    ).createUserWithEmailAndPassword(
+      email: _emailController.text,
+      password: _passwordController.text,
+      displayName: _nameController.text,
+    );
+    _handleRegistrationResult(success);
   }
 
   bool _validateForm() {
@@ -128,15 +124,5 @@ class _RegisterScreenState extends State<RegisterScreen> {
         context: context,
       );
     }
-  }
-
-  void _handleRegistrationError(dynamic error) {
-    if (!mounted) return;
-
-    Utils.showErrorSnackBar(
-      message: 'Registration failed: ${error.toString()}',
-      backgroundColor: Colors.red,
-      context: context,
-    );
   }
 }
