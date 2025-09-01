@@ -134,8 +134,6 @@ class ChatRoom {
     );
   }
 
-  bool get isNewChatRoom => id == null || id!.isEmpty;
-
   ChatRoom withId(String newId) {
     return ChatRoom(
       id: newId,

@@ -91,18 +91,4 @@ class ChatMessage {
       imageUrl: imageUrl,
     );
   }
-
-  bool get isNewMessage => id == null || id!.isEmpty;
-
-  ChatMessage withId(String newId) {
-    return ChatMessage(
-      id: newId,
-      senderId: senderId,
-      senderName: senderName,
-      content: content,
-      timestamp: timestamp,
-      isRead: isRead,
-      imageUrl: imageUrl,
-    );
-  }
 }
