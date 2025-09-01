@@ -4,25 +4,42 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import '../services/user_profile_service.dart';
 
+enum AuthState { initial, loading, authenticated, unauthenticated, error }
+
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService;
   final UserProfileService _userProfileService;
 
   AuthProvider(this._authService, this._userProfileService) {
-    _authService.authStateChanges.listen((User? user) {
-      _currentUser = user;
-      notifyListeners();
-    });
+    _initializeAuthState();
   }
 
-  bool _isLoading = false;
+  AuthState _authState = AuthState.initial;
   String? _errorMessage;
   User? _currentUser;
+  bool _isLoading = false;
 
-  bool get isLoading => _isLoading;
+  AuthState get authState => _authState;
   String? get errorMessage => _errorMessage;
   User? get currentUser => _currentUser;
   bool get isAuthenticated => _currentUser != null;
+  bool get isLoading => _isLoading;
+
+  void _initializeAuthState() {
+    _authService.authStateChanges.listen(
+      (User? user) {
+        _currentUser = user;
+        _authState =
+            user != null ? AuthState.authenticated : AuthState.unauthenticated;
+        notifyListeners();
+      },
+      onError: (error) {
+        _authState = AuthState.error;
+        _errorMessage = 'Authentication state error: $error';
+        notifyListeners();
+      },
+    );
+  }
 
   Future<bool> signInWithEmailAndPassword({
     required String email,
@@ -41,7 +58,7 @@ class AuthProvider extends ChangeNotifier {
       await _userProfileService.setUserOnline();
 
       _currentUser = user;
-      _setLoading(false);
+      _authState = AuthState.authenticated;
       return true;
     } on FirebaseAuthException catch (e) {
       _handleFirebaseAuthException(e);
@@ -72,7 +89,7 @@ class AuthProvider extends ChangeNotifier {
       await _userProfileService.createUserProfile(user, displayName);
 
       _currentUser = user;
-      _setLoading(false);
+      _authState = AuthState.authenticated;
       return true;
     } on FirebaseAuthException catch (e) {
       _handleFirebaseAuthException(e);
@@ -91,6 +108,9 @@ class AuthProvider extends ChangeNotifier {
     try {
       await _userProfileService.setUserOffline();
       await _authService.signOut();
+
+      _currentUser = null;
+      _authState = AuthState.unauthenticated;
     } catch (e) {
       _handleGenericError(e);
     } finally {
@@ -105,9 +125,10 @@ class AuthProvider extends ChangeNotifier {
     try {
       await _authService.updateUserDisplayName(displayName);
       await _userProfileService.updateUserDisplayName(displayName);
+
       _currentUser = _authService.currentUser;
       notifyListeners();
-      _setLoading(false);
+
       return true;
     } catch (e) {
       _handleGenericError(e);
@@ -117,18 +138,33 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  void reset() {
+    _authState = AuthState.initial;
+    _errorMessage = null;
+    _isLoading = false;
+    notifyListeners();
+  }
+
   void _setLoading(bool loading) {
     _isLoading = loading;
+    _authState = loading ? AuthState.loading : _authState;
     notifyListeners();
   }
 
   void _clearError() {
     _errorMessage = null;
+    if (_authState == AuthState.error) {
+      _authState =
+          _currentUser != null
+              ? AuthState.authenticated
+              : AuthState.unauthenticated;
+    }
     notifyListeners();
   }
 
   void _setError(String message) {
     _errorMessage = message;
+    _authState = AuthState.error;
     notifyListeners();
   }
 
@@ -167,14 +203,22 @@ class AuthProvider extends ChangeNotifier {
         message =
             'Invalid credentials. Please check your email and password, or try registering first.';
         break;
+      case 'user-token-expired':
+        message = 'Your session has expired. Please sign in again.';
+        break;
+      case 'requires-recent-login':
+        message =
+            'This operation requires recent authentication. Please sign in again.';
+        break;
       default:
-        message = 'Authentication failed. Please try again.';
+        message = 'Authentication failed: ${e.message ?? 'Unknown error'}.';
     }
 
     _setError(message);
   }
 
   void _handleGenericError(dynamic error) {
-    _setError('An unexpected error occurred. Please try again.');
+    final errorMessage = error is String ? error : error.toString();
+    _setError('An unexpected error occurred: $errorMessage');
   }
 }
