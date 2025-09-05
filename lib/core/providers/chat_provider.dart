@@ -1,50 +1,61 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import '../models/chat_message.dart';
 import '../models/chat_room.dart';
+import '../constants/app_constants.dart';
 
 class ChatProvider with ChangeNotifier {
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
 
+  List<ChatRoom> _chatRooms = [];
+  bool _isLoading = false;
+  Timer? _debounceTimer;
+  bool _isRefreshing = false;
+
   ChatProvider(this._auth, this._firestore);
 
-  List<ChatRoom> _chatRooms = [];
-  final List<ChatMessage> _messages = [];
-  bool _isLoading = false;
-  String? _currentChatRoomId;
-
   List<ChatRoom> get chatRooms => _chatRooms;
-  List<ChatMessage> get messages => _messages;
   bool get isLoading => _isLoading;
-  String? get currentChatRoomId => _currentChatRoomId;
+
+  String? get _currentUserId => _auth.currentUser?.uid;
+  String? get currentUserId => _currentUserId;
+
+  Query<Map<String, dynamic>> _buildChatRoomsQuery(String? currentUserId) {
+    return _firestore
+        .collection(AppConstants.chatRoomsCollection)
+        .where(AppConstants.chatRoomCurrentUserId, isEqualTo: currentUserId)
+        .orderBy(AppConstants.chatRoomLastMessageTime, descending: true);
+  }
 
   Future<void> loadChatRooms() async {
+    if (_isLoading) return;
+
     _isLoading = true;
     notifyListeners();
 
     try {
-      final currentUserId = _auth.currentUser?.uid;
-      if (currentUserId == null) return;
-
-      final querySnapshot =
-          await _firestore
-              .collection('chatRooms')
-              .where('currentUserId', isEqualTo: currentUserId)
-              .orderBy('lastMessageTime', descending: true)
-              .get();
+      QuerySnapshot querySnapshot =
+          await _buildChatRoomsQuery(_currentUserId).get();
 
       _chatRooms =
-          querySnapshot.docs
-              .map((doc) => ChatRoom.fromMap({...doc.data(), 'id': doc.id}))
-              .toList();
-    } catch (e) {
-      print('Error loading chat rooms: $e');
+          querySnapshot.docs.map((doc) {
+            return ChatRoom.fromFirestore(doc);
+          }).toList();
     } finally {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> refreshChatRooms() async {
+    if (_isRefreshing) return;
+
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () async {
+      await loadChatRooms();
+    });
   }
 }
