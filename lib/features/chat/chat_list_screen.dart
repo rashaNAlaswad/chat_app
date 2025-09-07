@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../core/providers/auth_provider.dart';
 import '../../core/providers/chat_provider.dart';
 import '../../core/router/routes.dart';
 import '../../core/theme/app_colors.dart';
@@ -55,27 +54,11 @@ class _ChatListScreenState extends State<ChatListScreen>
 
   Future<void> _initializeScreen() async {
     if (_isInitialized) return;
-
-    try {
-      await _loadChatRooms();
-      _isInitialized = true;
-    } catch (e) {
-      _setError('Failed to load chats. Please try again.');
-    }
+    await _loadChatRooms();
+    _isInitialized = true;
   }
 
   Future<void> _loadChatRooms() async {
-    if (!mounted) return;
-
-    final authProvider = context.read<AuthProvider>();
-
-    if (!authProvider.isAuthenticated) {
-      if (mounted) {
-        context.pushReplacementNamed(Routes.login);
-      }
-      return;
-    }
-
     try {
       _clearError();
       await context.read<ChatProvider>().loadChatRooms();
@@ -239,6 +222,7 @@ class _ChatListScreenState extends State<ChatListScreen>
           return ChatRoomTile(
             key: ValueKey(chatRoom.id),
             chatRoom: chatRoom,
+            currentUserId: chatProvider.currentUserId,
             onTap:
                 () => context.pushNamed(
                   Routes.chatDetail,
@@ -255,7 +239,6 @@ class _ChatListScreenState extends State<ChatListScreen>
       onPressed: () => context.pushNamed(Routes.userList),
       backgroundColor: AppColors.greenPrimary,
       foregroundColor: AppColors.white,
-      tooltip: 'Start new chat',
       child: const Icon(Icons.person_add),
     );
   }
