@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/providers/user_provider.dart';
+import '../../../core/providers/chat_provider.dart';
 import '../../../core/router/routes.dart';
 import '../../../core/theme/app_text_styles.dart';
 import 'user_tile.dart';
@@ -52,7 +53,24 @@ class UserListContent extends StatelessWidget {
     );
   }
 
-  void _handleUserTap(BuildContext context, user) {
-    context.pushNamed(Routes.chatDetail, arguments: user.id);
+  Future<void> _handleUserTap(BuildContext context, user) async {
+    final chatProvider = context.read<ChatProvider>();
+
+    final chatRoomId = await chatProvider.createOrFindChatRoom(
+      user.id,
+      user.displayName,
+    );
+
+    if (chatRoomId != null) {
+      if (context.mounted) {
+        context.pushNamed(Routes.chatDetail, arguments: chatRoomId);
+      }
+    } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Failed to start chat')));
+      }
+    }
   }
 }

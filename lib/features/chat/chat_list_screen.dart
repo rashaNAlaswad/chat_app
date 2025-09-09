@@ -226,7 +226,7 @@ class _ChatListScreenState extends State<ChatListScreen>
             onTap:
                 () => context.pushNamed(
                   Routes.chatDetail,
-                  arguments: chatRoom.otherUserId,
+                  arguments: chatRoom.id,
                 ),
           );
         },

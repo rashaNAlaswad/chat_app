@@ -29,6 +29,30 @@ class ChatProvider with ChangeNotifier {
   List<ChatMessage> get messages => _messages;
   String? get currentChatRoomId => _currentChatRoomId;
 
+  Future<String> getOtherUserName(String chatRoomId) async {
+    // First try to find in local chat rooms list
+    final existingChatRoom =
+        _chatRooms.where((room) => room.id == chatRoomId).firstOrNull;
+
+    if (existingChatRoom != null) {
+      return existingChatRoom.otherUserName;
+    }
+
+    // If not found locally, try to fetch from Firestore directly
+    final doc =
+        await _firestore
+            .collection(AppConstants.chatRoomsCollection)
+            .doc(chatRoomId)
+            .get();
+
+    if (doc.exists) {
+      final data = doc.data() as Map<String, dynamic>;
+      return data[AppConstants.chatRoomOtherUserName] ?? 'Chat';
+    }
+
+    return 'Chat';
+  }
+
   Query<Map<String, dynamic>> _buildChatRoomsQuery(String? currentUserId) {
     return _firestore
         .collection(AppConstants.chatRoomsCollection)
@@ -61,6 +85,52 @@ class ChatProvider with ChangeNotifier {
     _debounceTimer = Timer(const Duration(milliseconds: 300), () async {
       await loadChatRooms();
     });
+  }
+
+  Future<String?> createOrFindChatRoom(
+    String otherUserId,
+    String otherUserName,
+  ) async {
+    if (currentUserId == null) return null;
+
+    final existingRoom =
+        _chatRooms.where((room) => room.otherUserId == otherUserId).firstOrNull;
+
+    if (existingRoom != null) {
+      return existingRoom.id;
+    }
+
+    // Create new chat room
+    final chatRoomData = {
+      AppConstants.chatRoomCurrentUserId: currentUserId!,
+      AppConstants.chatRoomOtherUserId: otherUserId,
+      AppConstants.chatRoomOtherUserName: otherUserName,
+      AppConstants.chatRoomLastMessage: '',
+      AppConstants.chatRoomLastMessageTime: DateTime.now(),
+      AppConstants.chatRoomLastMessageSenderId: '',
+      AppConstants.chatRoomUnreadCount: 0,
+    };
+
+    final docRef = await _firestore
+        .collection(AppConstants.chatRoomsCollection)
+        .add(chatRoomData);
+
+    // Create a ChatRoom object and add it to the local list immediately
+    final newChatRoom = ChatRoom(
+      id: docRef.id,
+      currentUserId: currentUserId!,
+      otherUserId: otherUserId,
+      otherUserName: otherUserName,
+      lastMessage: '',
+      lastMessageTime: DateTime.now(),
+      lastMessageSenderId: '',
+      unreadCount: 0,
+    );
+
+    _chatRooms.insert(0, newChatRoom);
+    notifyListeners();
+
+    return docRef.id;
   }
 
   Future<void> sendMessage(String message) async {
@@ -103,6 +173,10 @@ class ChatProvider with ChangeNotifier {
   }
 
   Future<void> _loadMessages() async {
+    if (_currentChatRoomId == null) {
+      return;
+    }
+
     _messagesSubscription = _firestore
         .collection(AppConstants.chatRoomsCollection)
         .doc(_currentChatRoomId!)
